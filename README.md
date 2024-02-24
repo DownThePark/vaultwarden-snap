@@ -3,7 +3,7 @@
 
 ## Introduction
 
-This is a community-developed snap for the [Vaultwarden](https://github.com/dani-garcia/vaultwarden) project, made with the aim to provide a stable, secure, and simple experience.
+This is a community-developed snap for the [Vaultwarden](https://github.com/dani-garcia/vaultwarden) project that aims to provide a stable, secure, and simple experience.
 
 ## Features
 - Strict confinement (only uses the `network` and `network-bind` interfaces)
