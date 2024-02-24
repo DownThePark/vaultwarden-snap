@@ -1,0 +1,50 @@
+name: Update to upstream
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 12 * * *'
+
+jobs:
+  update:
+    runs-on: ubuntu-22.04
+    environment: candidate
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Configure git
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git checkout candidate
+
+      - name: Get versions
+        run: |
+          echo "VERSION_UPSTREAM=$(curl -sL https://api.github.com/repos/dani-garcia/vaultwarden/releases/latest | jq -r ".tag_name")" >> "$GITHUB_ENV"
+          echo "VERSION_LOCAL=$(grep 'version:' snap/snapcraft.yaml | tail -n1 | cut -c10-)" >> "$GITHUB_ENV"
+
+      - name: Bump snapcraft.yaml
+        if: ${{ env.VERSION_UPSTREAM != env.VERSION_LOCAL }}
+        run: |
+          if [ "$(git rev-parse main)" == "$(git rev-parse candidate)" ] ; then echo EQUAL=yes >> "$GITHUB_ENV" ; fi
+          sed -i "2 s/.*/version: ${{ env.VERSION_UPSTREAM }}/" snap/snapcraft.yaml
+          git add snap/snapcraft.yaml
+          git commit -m "[BOT] Bump to v${{ env.VERSION_UPSTREAM }}"
+
+      - name: Push changes (candidate branch)
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.PAT }}
+          branch: candidate
+
+      - name: Push changes (main branch)
+        if: ${{ env.VERSION_UPSTREAM != env.VERSION_LOCAL && env.EQUAL == 'yes' }}
+        run: |
+          git checkout main
+          git rebase candidate main
+          git push -u origin main

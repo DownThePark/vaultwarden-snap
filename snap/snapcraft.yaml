@@ -1,0 +1,92 @@
+name: vaultwarden
+version: 1.30.2
+summary: Unofficial Bitwarden compatible server written in Rust
+description: |
+  Vaultwarden is a Rust-based implementation of the Bitwarden® server API that provides
+  compatibility with upstream Bitwarden® clients, perfect for self-hosted deployments
+  where running the official resource-heavy service might not be ideal. Vaultwarden is neither
+  associated with nor endorsed by Bitwarden® Inc.
+
+base: core22
+grade: stable
+confinement: strict
+license: AGPL-3.0-only
+architectures:
+  - build-on: [amd64]
+    build-for: [amd64]
+  - build-on: [amd64, arm64]
+    build-for: [arm64]
+  - build-on: [amd64, armhf]
+    build-for: [armhf]
+
+apps:
+  vaultwarden:
+    command: bin/vaultwarden
+    daemon: simple
+    plugs: [network, network-bind]
+
+environment:
+  WEB_VAULT_FOLDER: $SNAP/web-vault
+  DATA_FOLDER: $SNAP_DATA/data
+
+hooks:
+  install:
+    command-chain:
+      - snap/command-chain/install.sh
+
+layout:
+  /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libmariadb3:
+    bind: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libmariadb3
+
+parts:
+  prepare-env:
+    plugin: nil
+    override-pull: |
+      if [[ "$CRAFT_ARCH_BUILD_ON" == "amd64" && "$CRAFT_ARCH_BUILD_FOR" != "amd64" ]] ; then
+        apt install -y software-properties-common
+        apt install -y coreutils
+        add-apt-repository -n "deb [arch=$CRAFT_ARCH_BUILD_FOR] http://ports.ubuntu.com/ubuntu-ports jammy main restricted"
+        add-apt-repository -n "deb [arch=$CRAFT_ARCH_BUILD_FOR] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted"
+        add-apt-repository -n "deb [arch=$CRAFT_ARCH_BUILD_FOR] http://ports.ubuntu.com/ubuntu-ports jammy universe"
+        add-apt-repository -n "deb [arch=$CRAFT_ARCH_BUILD_FOR] http://ports.ubuntu.com/ubuntu-ports jammy-updates universe"
+        add-apt-repository -n "deb [arch=$CRAFT_ARCH_BUILD_FOR] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted"
+        add-apt-repository -n "deb [arch=$CRAFT_ARCH_BUILD_FOR] http://ports.ubuntu.com/ubuntu-ports jammy-security universe"
+        apt update
+      fi
+  vaultwarden:
+    after: [prepare-env]
+    plugin: nil
+    build-packages:
+      - wget
+    override-build: |
+      wget https://raw.githubusercontent.com/jjlin/docker-image-extract/main/docker-image-extract
+      chmod +x docker-image-extract
+      if [[ "$CRAFT_ARCH_BUILD_FOR" == "amd64" ]] ; then
+        ./docker-image-extract vaultwarden/server:$SNAPCRAFT_PROJECT_VERSION
+      elif [[ "$CRAFT_ARCH_BUILD_FOR" == "arm64" ]] ; then
+        ./docker-image-extract -p linux/arm64 vaultwarden/server:$SNAPCRAFT_PROJECT_VERSION
+      elif [[ "$CRAFT_ARCH_BUILD_FOR" == "armhf" ]] ; then
+        ./docker-image-extract -p linux/arm/v7 vaultwarden/server:$SNAPCRAFT_PROJECT_VERSION
+      fi
+    stage-packages:
+      - on amd64 to arm64:
+        - "libmariadb3:arm64"
+        - "libpq5:arm64"
+      - on amd64 to armhf:
+        - "libmariadb3:armhf"
+        - "libpq5:armhf"
+      - else:
+        - "libmariadb3"
+        - "libpq5"
+    override-prime: |
+      craftctl default
+      mkdir -p bin/
+      cp $CRAFT_PART_BUILD/output/vaultwarden bin/
+      cp -r $CRAFT_PART_BUILD/output/web-vault ./
+      rm -rf etc
+      rm -rf usr/share
+  local:
+    after: [vaultwarden]
+    plugin: dump
+    source: snap/local
+    source-type: local
