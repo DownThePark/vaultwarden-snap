@@ -85,6 +85,10 @@ parts:
       cp -r $CRAFT_PART_BUILD/output/web-vault ./
       rm -rf etc
       rm -rf usr/share
+      # arm64 and armhf specific
+      if [[ "$CRAFT_ARCH_BUILD_ON" == "amd64" && "$CRAFT_ARCH_BUILD_FOR" != "amd64" ]] ; then
+        rm -rf lib
+      fi
   local:
     after: [vaultwarden]
     plugin: dump
