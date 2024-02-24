@@ -1,0 +1,27 @@
+name: Sync version with upstream
+
+on:
+  schedule:
+    - cron:  '0 12 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    name: Sync version with upstream
+    environment: candidate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sync version with upstream
+        uses: snapcrafters/ci/sync-version@main
+        with:
+          token: ${{ secrets.PAT }}
+          update-script: |
+            VERSION=$(
+              curl -sL https://api.github.com/repos/dani-garcia/vaultwarden/releases | 
+              jq .  | grep tag_name | grep -v beta | head -n 1 | cut -d'"' -f4 | tr -d 'v'
+            )
+            sed -i 's/^\(version: \).*$/\1'"$VERSION"'/' snap/snapcraft.yaml
