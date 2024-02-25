@@ -1,9 +1,9 @@
 name: Sync version with upstream
 
 on:
+  workflow_dispatch:
   schedule:
     - cron:  '0 12 * * *'
-  workflow_dispatch:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
