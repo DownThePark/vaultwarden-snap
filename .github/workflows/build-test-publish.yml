@@ -7,6 +7,10 @@ on:
     paths:
       - 'snap/**'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   action:
     runs-on: ubuntu-22.04
