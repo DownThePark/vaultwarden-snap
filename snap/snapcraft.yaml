@@ -1,5 +1,5 @@
 name: vaultwarden
-version: 1.30.3
+version: 1.30.5
 summary: Unofficial Bitwarden compatible server written in Rust
 description: |
   Vaultwarden is a Rust-based implementation of the Bitwarden® server API that provides
