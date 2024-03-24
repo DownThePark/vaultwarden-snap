@@ -18,7 +18,7 @@ jobs:
       - name: Sync version with upstream
         uses: snapcrafters/ci/sync-version@main
         with:
-          token: ${{ secrets.PAT }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           update-script: |
             VERSION=$(
               curl -sL https://api.github.com/repos/dani-garcia/vaultwarden/releases | 
