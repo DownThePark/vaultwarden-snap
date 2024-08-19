@@ -7,17 +7,14 @@ description: |
   where running the official resource-heavy service might not be ideal. Vaultwarden is neither
   associated with nor endorsed by Bitwarden® Inc.
 
-base: core22
+base: core24
 grade: stable
 confinement: strict
 license: AGPL-3.0-only
-architectures:
-  - build-on: [amd64]
-    build-for: [amd64]
-  - build-on: [amd64, arm64]
-    build-for: [arm64]
-  - build-on: [amd64, armhf]
-    build-for: [armhf]
+platforms:
+  amd64:
+  arm64:
+  armhf:
 
 apps:
   vaultwarden:
@@ -39,22 +36,7 @@ layout:
     bind: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libmariadb3
 
 parts:
-  prepare-env:
-    plugin: nil
-    override-pull: |
-      if [[ "$CRAFT_ARCH_BUILD_ON" == "amd64" && "$CRAFT_ARCH_BUILD_FOR" != "amd64" ]] ; then
-        apt install -y software-properties-common
-        apt install -y coreutils
-        add-apt-repository -n "deb [arch=$CRAFT_ARCH_BUILD_FOR] http://ports.ubuntu.com/ubuntu-ports jammy main restricted"
-        add-apt-repository -n "deb [arch=$CRAFT_ARCH_BUILD_FOR] http://ports.ubuntu.com/ubuntu-ports jammy-updates main restricted"
-        add-apt-repository -n "deb [arch=$CRAFT_ARCH_BUILD_FOR] http://ports.ubuntu.com/ubuntu-ports jammy universe"
-        add-apt-repository -n "deb [arch=$CRAFT_ARCH_BUILD_FOR] http://ports.ubuntu.com/ubuntu-ports jammy-updates universe"
-        add-apt-repository -n "deb [arch=$CRAFT_ARCH_BUILD_FOR] http://ports.ubuntu.com/ubuntu-ports jammy-security main restricted"
-        add-apt-repository -n "deb [arch=$CRAFT_ARCH_BUILD_FOR] http://ports.ubuntu.com/ubuntu-ports jammy-security universe"
-        apt update
-      fi
   vaultwarden:
-    after: [prepare-env]
     plugin: nil
     build-packages:
       - wget
@@ -69,15 +51,8 @@ parts:
         ./docker-image-extract -p linux/arm/v7 vaultwarden/server:$SNAPCRAFT_PROJECT_VERSION
       fi
     stage-packages:
-      - on amd64 to arm64:
-        - "libmariadb3:arm64"
-        - "libpq5:arm64"
-      - on amd64 to armhf:
-        - "libmariadb3:armhf"
-        - "libpq5:armhf"
-      - else:
-        - "libmariadb3"
-        - "libpq5"
+      - "libmariadb3"
+      - "libpq5"
     override-prime: |
       craftctl default
       mkdir -p bin/
@@ -85,11 +60,6 @@ parts:
       cp -r $CRAFT_PART_BUILD/output/web-vault ./
       rm -rf etc
       rm -rf usr/share
-      # arm64 and armhf specific
-      if [[ "$CRAFT_ARCH_BUILD_ON" == "amd64" && "$CRAFT_ARCH_BUILD_FOR" != "amd64" ]] ; then
-        rm -rf lib
-        rm -rf usr/lib/x86_64-linux-gnu
-      fi
   local:
     after: [vaultwarden]
     plugin: dump
