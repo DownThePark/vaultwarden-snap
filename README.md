@@ -3,7 +3,7 @@
 
 ## Introduction
 
-This is a community-developed snap for the [Vaultwarden](https://github.com/dani-garcia/vaultwarden) project, made by repacking the Vaultwarden binary and Web Vault files from the official Vaultwarden Docker image.
+This is a snap for the [Vaultwarden](https://github.com/dani-garcia/vaultwarden) project, made by repackaging the exact same Vaultwarden binary and Web Vault files from the official Vaultwarden Docker image. This snap aims to bring the benefits of the snap packaging format to Vaultwarden, by providing strict confinement security, and automatic updates.
 
 ## Features
 - Strict confinement
