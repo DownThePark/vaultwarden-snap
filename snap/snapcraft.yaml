@@ -50,16 +50,16 @@ parts:
       elif [[ "$CRAFT_ARCH_BUILD_FOR" == "armhf" ]] ; then
         ./docker-image-extract -p linux/arm/v7 vaultwarden/server:$SNAPCRAFT_PROJECT_VERSION
       fi
+      mkdir $CRAFT_PART_INSTALL/bin/
+      cp output/vaultwarden $CRAFT_PART_INSTALL/bin/
+      cp -r output/web-vault/ $CRAFT_PART_INSTALL/
     stage-packages:
-      - "libmariadb3"
-      - "libpq5"
-    override-prime: |
-      craftctl default
-      mkdir -p bin/
-      cp $CRAFT_PART_BUILD/output/vaultwarden bin/
-      cp -r $CRAFT_PART_BUILD/output/web-vault ./
-      rm -rf etc
-      rm -rf usr/share
+      - libmariadb3
+      - libpq5
+    stage:
+      - bin/
+      - usr/lib/
+      - web-vault/
   local:
     after: [vaultwarden]
     plugin: dump
