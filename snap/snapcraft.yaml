@@ -38,8 +38,10 @@ apps:
 parts:
   vaultwarden:
     plugin: nil
+    build-packages:
+      - wget
     override-build: |
-      curl -O https://raw.githubusercontent.com/jjlin/docker-image-extract/main/docker-image-extract
+      wget https://raw.githubusercontent.com/jjlin/docker-image-extract/main/docker-image-extract
       chmod +x docker-image-extract
       if [[ "$CRAFT_ARCH_BUILD_FOR" == "amd64" ]] ; then
         ./docker-image-extract vaultwarden/server:$SNAPCRAFT_PROJECT_VERSION
