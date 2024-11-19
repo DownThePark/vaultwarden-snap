@@ -16,32 +16,30 @@ platforms:
   arm64:
   armhf:
 
-apps:
-  vaultwarden:
-    command: bin/vaultwarden
-    daemon: simple
-    plugs: [network, network-bind]
-
-environment:
-  WEB_VAULT_FOLDER: $SNAP/web-vault
-  DATA_FOLDER: $SNAP_DATA/data
+layout:
+  /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libmariadb3:
+    symlink: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libmariadb3
 
 hooks:
   install:
     command-chain:
       - snap/command-chain/install.sh
 
-layout:
-  /usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libmariadb3:
-    symlink: $SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR/libmariadb3
+environment:
+  WEB_VAULT_FOLDER: $SNAP/web-vault
+  DATA_FOLDER: $SNAP_DATA/data
+
+apps:
+  vaultwarden:
+    command: bin/vaultwarden
+    daemon: simple
+    plugs: [network, network-bind]
 
 parts:
   vaultwarden:
     plugin: nil
-    build-packages:
-      - wget
     override-build: |
-      wget https://raw.githubusercontent.com/jjlin/docker-image-extract/main/docker-image-extract
+      curl -O https://raw.githubusercontent.com/jjlin/docker-image-extract/main/docker-image-extract
       chmod +x docker-image-extract
       if [[ "$CRAFT_ARCH_BUILD_FOR" == "amd64" ]] ; then
         ./docker-image-extract vaultwarden/server:$SNAPCRAFT_PROJECT_VERSION
