@@ -59,7 +59,6 @@ parts:
       - usr/lib/
       - web-vault/
   local:
-    after: [vaultwarden]
     plugin: dump
     source: snap/local
     source-type: local
